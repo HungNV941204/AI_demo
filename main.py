@@ -8,16 +8,13 @@ from ipmsm_env import IPMSMEnv
 # Create environment
 env = IPMSMEnv()
 
-# Add evaluation callback for optimization
-eval_callback = EvalCallback(env, best_model_save_path='./logs/',
-                             log_path='./logs/', eval_freq=1000,
-                             deterministic=True, render=False)
+# EvalCallback removed due to timeout issues
 
 # Instantiate the agent with optimized hyperparameters
 model = PPO('MlpPolicy', env, verbose=1, learning_rate=1e-4, n_steps=4096, batch_size=128, n_epochs=20, gamma=0.99, gae_lambda=0.95)
 
 # Train the agent with more timesteps for optimization
-model.learn(total_timesteps=50000, callback=eval_callback)
+model.learn(total_timesteps=100000)
 
 # Save the agent
 model.save("ppo_ipmsm_optimized")

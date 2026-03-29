@@ -99,7 +99,9 @@ class IPMSMEnv(gym.Env):
         i_d, i_q, omega, theta = self.state
         omega_error = abs(self.omega_ref - omega) / self.omega_ref  # normalized error
         current_penalty = (i_d ** 2 + i_q ** 2) / (self.I_max ** 2) * 0.1
-        reward = -omega_error - current_penalty
+        # Reward shaping: bonus for low error
+        bonus = 0.5 if omega_error < 0.1 else 0
+        reward = -omega_error - current_penalty + bonus
         return reward
 
     def _is_terminated(self):
