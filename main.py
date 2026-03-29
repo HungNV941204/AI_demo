@@ -10,8 +10,8 @@ env = IPMSMEnv()
 # Instantiate the agent with PPO for continuous control
 model = PPO('MlpPolicy', env, verbose=1, learning_rate=3e-4, n_steps=2048, batch_size=64, n_epochs=10)
 
-# Train the agent (reduced timesteps for faster testing)
-model.learn(total_timesteps=5000)
+# Train the agent (increased timesteps for better accuracy)
+model.learn(total_timesteps=20000)
 
 # Save the agent
 model.save("ppo_ipmsm")

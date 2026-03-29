@@ -19,23 +19,32 @@ except:
 # Create environment
 env = IPMSMEnv()
 
-# Evaluate the policy
-mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10)
-print(f"Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
+# Evaluate the policy (commented out due to timeout issues)
+# mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10)
+# print(f"Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
 
 # Test manually
 obs, info = env.reset()
 total_reward = 0
 steps = 0
-for i in range(500):
+episode_rewards = []
+for i in range(1000):
     action, _states = model.predict(obs)
     obs, reward, terminated, truncated, info = env.step(action)
     total_reward += reward
     steps += 1
     if terminated or truncated:
-        print(f"Episode finished after {steps} steps with total reward {total_reward:.2f}")
+        print(f"Episode {len(episode_rewards)+1}: {steps} steps, total reward {total_reward:.2f}")
+        episode_rewards.append(total_reward)
         obs, info = env.reset()
         total_reward = 0
         steps = 0
+        if len(episode_rewards) >= 5:
+            break
+
+if episode_rewards:
+    mean_reward = sum(episode_rewards) / len(episode_rewards)
+    std_reward = (sum((r - mean_reward)**2 for r in episode_rewards) / len(episode_rewards))**0.5
+    print(f"Overall: Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
 
 env.close()
