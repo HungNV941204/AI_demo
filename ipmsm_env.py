@@ -1,6 +1,6 @@
-import gym
+import gymnasium as gym
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 
@@ -60,7 +60,7 @@ class IPMSMEnv(gym.Env):
         self.state = None
         self.reset()
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
         # Initial state: small random currents, zero speed, random angle
         i_d = np.random.uniform(-0.1, 0.1)
         i_q = np.random.uniform(-0.1, 0.1)
@@ -68,7 +68,7 @@ class IPMSMEnv(gym.Env):
         theta = np.random.uniform(0, 2*np.pi)
         self.state = np.array([i_d, i_q, omega, theta])
         self.time = 0
-        return self._get_obs()
+        return self._get_obs(), {}
 
     def _get_obs(self):
         i_d, i_q, omega, theta = self.state
@@ -90,22 +90,25 @@ class IPMSMEnv(gym.Env):
 
         obs = self._get_obs()
         reward = self._calculate_reward()
-        done = self._is_done()
+        terminated = self._is_terminated()
+        truncated = self._is_truncated()
 
-        return obs, reward, done, {}
+        return obs, reward, terminated, truncated, {}
 
     def _calculate_reward(self):
         i_d, i_q, omega, theta = self.state
-        omega_error = (self.omega_ref - omega) ** 2
-        current_penalty = (i_d ** 2 + i_q ** 2) * 0.1
-        voltage_penalty = abs(i_d) * 0.05  # approximate
-        reward = -10 * omega_error - current_penalty - voltage_penalty
+        omega_error = abs(self.omega_ref - omega) / self.omega_ref  # normalized error
+        current_penalty = (i_d ** 2 + i_q ** 2) / (self.I_max ** 2) * 0.1
+        reward = -omega_error - current_penalty
         return reward
 
-    def _is_done(self):
+    def _is_terminated(self):
         i_d, i_q, omega, theta = self.state
         if abs(omega) > self.omega_max or abs(i_d) > self.I_max or abs(i_q) > self.I_max:
             return True
+        return False
+
+    def _is_truncated(self):
         if self.time >= self.t_max:
             return True
         return False
