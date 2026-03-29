@@ -1,0 +1,6 @@
+gym
+numpy
+matplotlib
+torch
+stable-baselines3
+scipy
